@@ -15,13 +15,13 @@
 
 ---
 
-## Interface Preview
+### Interface Preview
 
-### App Icon
-![App Icon](Images/Universal_Converter_icon.png)
+**App Icon**  
+![App Icon](Images/Universal_Converter_icon.ico)
 
-### Application Screenshot
-![Screenshot](Images/screenshot.png)
+**Application Screenshot**  
+![Screenshot](Images/Screenshot.png)
 
 ---
 
