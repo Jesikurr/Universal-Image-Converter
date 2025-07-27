@@ -35,7 +35,7 @@ Get the latest version from the [Releases page](https://github.com/Jesikurr/Univ
 
 ### 🖱️ Run the GUI (Windows)
 
-- Launch `Image Converter.exe` from the `/dist` folder  
+- Launch `Image Converter.exe` 
   *(If SmartScreen appears, click **More Info > Run Anyway**)*
 
 ### 🐍 Run via Python
