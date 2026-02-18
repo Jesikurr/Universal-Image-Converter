@@ -9,6 +9,7 @@ import sys
 import ctypes
 import tkinter as tk
 from tkinter import filedialog, messagebox
+import threading
 from PIL import Image, ImageTk
 import ttkbootstrap as tb
 import webbrowser
@@ -109,8 +110,25 @@ class ImageConverterApp:
         self.format_combo.pack(fill=X, padx=10, pady=(10, 5))
         self.format_combo.set("Select output format")
 
-        convert_btn = tb.Button(main_frame, text="Convert Images", bootstyle="success", command=self.convert_all)
-        convert_btn.pack(pady=(5, 15))
+        # Progress bar
+        self.progress_frame = tb.Frame(main_frame)
+        self.progress_frame.pack(fill=X, padx=10, pady=5)
+        
+        self.progress_bar = tb.Progressbar(
+            self.progress_frame,
+            mode='determinate',
+            bootstyle="success-striped"
+        )
+        self.progress_bar.pack(fill=X, pady=5)
+        
+        self.progress_label = tb.Label(self.progress_frame, text="")
+        self.progress_label.pack()
+        
+        # Hide progress initially
+        self.progress_frame.pack_forget()
+
+        self.convert_btn = tb.Button(main_frame, text="Convert Images", bootstyle="success", command=self.convert_all)
+        self.convert_btn.pack(pady=(5, 15))
 
         donate_btn = tb.Button(self.app, text="💚 Support the Developer 💚", bootstyle="info", command=self.show_donation_info)
         donate_btn.pack(anchor="se", padx=10, pady=5, ipadx=5, ipady=2)
@@ -134,6 +152,7 @@ class ImageConverterApp:
             self.drop_label.config(text=f"{len(self.files)} file(s) selected")
 
     def convert_all(self):
+        """Start the image conversion process in a separate thread."""
         out_format = self.format_var.get()
         if not self.files or out_format == "Select output format":
             messagebox.showerror("Error", "Please select files and output format")
@@ -143,13 +162,80 @@ class ImageConverterApp:
         if not out_dir:
             return
 
+        # Disable UI during conversion
+        self.convert_btn.config(state="disabled")
+        self.format_combo.config(state="disabled")
+        
+        # Show progress bar
+        self.progress_frame.pack(fill=X, padx=10, pady=5, before=self.convert_btn)
+        self.progress_bar['value'] = 0
+        self.progress_label.config(text="Starting conversion...")
+        
+        # Start conversion in separate thread
+        thread = threading.Thread(
+            target=self._convert_images_thread,
+            args=(self.files.copy(), out_dir, out_format),
+            daemon=True
+        )
+        thread.start()
+    
+    def _convert_images_thread(self, files, out_dir, out_format):
+        """Perform image conversion in background thread.
+        
+        Args:
+            files (list): List of file paths to convert
+            out_dir (str): Output directory path
+            out_format (str): Target output format
+        """
         success = 0
-        for f in self.files:
+        total = len(files)
+        
+        for idx, f in enumerate(files, 1):
             result = convert_image(f, out_dir, out_format)
             if result:
                 success += 1
-
-        messagebox.showinfo("Conversion Complete", f"Converted {success} of {len(self.files)} files to {out_format.upper()}")
+            
+            # Update progress bar
+            progress = (idx / total) * 100
+            self.app.after(0, self._update_progress, progress, idx, total)
+        
+        # Conversion complete
+        self.app.after(0, self._conversion_complete, success, total, out_format)
+    
+    def _update_progress(self, value, current, total):
+        """Update progress bar and label (called from main thread).
+        
+        Args:
+            value (float): Progress percentage (0-100)
+            current (int): Current file number
+            total (int): Total number of files
+        """
+        self.progress_bar['value'] = value
+        self.progress_label.config(text=f"Converting: {current}/{total} files")
+        self.app.update_idletasks()
+    
+    def _conversion_complete(self, success, total, out_format):
+        """Handle conversion completion (called from main thread).
+        
+        Args:
+            success (int): Number of successfully converted files
+            total (int): Total number of files processed
+            out_format (str): Output format used
+        """
+        # Hide progress bar
+        self.progress_frame.pack_forget()
+        
+        # Re-enable UI
+        self.convert_btn.config(state="normal")
+        self.format_combo.config(state="readonly")
+        
+        # Show result
+        messagebox.showinfo(
+            "Conversion Complete",
+            f"Converted {success} of {total} files to {out_format.upper()}"
+        )
+        
+        # Reset UI
         self.files = []
         self.drop_label.config(text="Drag and drop images here")
 
