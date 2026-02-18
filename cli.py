@@ -6,7 +6,10 @@ files or entire folders. Includes format validation and progress reporting.
 
 import argparse
 import os
+import logging
 from converter import convert_image, get_supported_output_formats, get_supported_input_formats
+
+logger = logging.getLogger(__name__)
 
 def main():
     """Main entry point for the CLI application.
@@ -44,11 +47,13 @@ def main():
 
     # Validate required arguments
     if not args.output_format:
+        logger.error("Missing required argument: --output-format")
         print("❌ Error: --output-format is required")
         parser.print_help()
         return
     
     if not args.output_folder:
+        logger.error("Missing required argument: --output-folder")
         print("❌ Error: --output-folder is required")
         parser.print_help()
         return
@@ -67,9 +72,11 @@ def main():
         input_files.extend(args.input)
 
     if not input_files:
+        logger.warning("No valid input files found")
         print("❌ No input files found. Use --input or --input-folder with supported formats.")
         return
 
+    logger.info(f"Starting batch conversion of {len(input_files)} file(s) to {args.output_format.upper()}")
     total = len(input_files)
     success = 0
 
@@ -79,8 +86,10 @@ def main():
             if result:
                 success += 1
         else:
+            logger.warning(f"Skipping invalid file: {f}")
             print(f"[SKIP] {f} is not a valid file.")
 
+    logger.info(f"Batch conversion complete: {success}/{total} files converted successfully")
     print(f"Done. Converted {success} of {total} file(s) to {args.output_format.upper()}.")
 
 if __name__ == "__main__":

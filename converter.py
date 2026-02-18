@@ -5,8 +5,16 @@ various formats using Pillow and pillow-heif libraries.
 """
 
 import os
+import logging
 from PIL import Image
 import pillow_heif
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 pillow_heif.register_heif_opener()
 
@@ -72,11 +80,13 @@ def convert_image(in_path, out_dir, out_format):
                 im = im.resize((256, 256))
             im.save(out_file, format=pil_format)
 
+        logger.info(f"Successfully converted: {in_path} → {out_file}")
         with open(desktop_log_path, "a", encoding="utf-8") as log:
             log.write(f"✅ Converted: {in_path} → {out_file}\n")
         return True
 
     except Exception as e:
+        logger.error(f"Failed to convert {in_path}: {e}")
         with open(desktop_log_path, "a", encoding="utf-8") as log:
             log.write(f"❌ Failed: {in_path} → {e}\n")
         return False
