@@ -1,31 +1,51 @@
 import argparse
 import os
-from converter import convert_image, get_supported_output_formats
+from converter import convert_image, get_supported_output_formats, get_supported_input_formats
 
 def main():
     parser = argparse.ArgumentParser(description="Universal Image Converter CLI")
     parser.add_argument("--input", "-i", nargs="+", help="Path(s) to image file(s)")
-    parser.add_argument("--input-dir", help="Folder containing image files to convert")
-    parser.add_argument("--output", "-o", required=True, help="Output directory")
-    parser.add_argument("--format", "-f", required=True, choices=get_supported_output_formats(), help="Output format")
+    parser.add_argument("--input-folder", help="Folder containing image files to convert")
+    parser.add_argument("--output-format", "-f", choices=get_supported_output_formats(), help="Output format")
+    parser.add_argument("--output-folder", "-o", help="Output directory")
+    parser.add_argument("--list-formats", action="store_true", help="List all supported output formats")
 
     args = parser.parse_args()
+    
+    # Handle --list-formats flag
+    if args.list_formats:
+        print("Supported input formats:")
+        print(", ".join(get_supported_input_formats()).upper())
+        print("\nSupported output formats:")
+        print(", ".join(get_supported_output_formats()).upper())
+        return
+
+    # Validate required arguments
+    if not args.output_format:
+        print("❌ Error: --output-format is required")
+        parser.print_help()
+        return
+    
+    if not args.output_folder:
+        print("❌ Error: --output-folder is required")
+        parser.print_help()
+        return
 
     input_files = []
 
-    if args.input_dir:
-        for fname in os.listdir(args.input_dir):
-            path = os.path.join(args.input_dir, fname)
+    if args.input_folder:
+        for fname in os.listdir(args.input_folder):
+            path = os.path.join(args.input_folder, fname)
             if os.path.isfile(path):
                 ext = os.path.splitext(fname)[1].lower().strip(".")
-                if ext in get_supported_output_formats():
+                if ext in get_supported_input_formats():
                     input_files.append(path)
 
     if args.input:
         input_files.extend(args.input)
 
     if not input_files:
-        print("❌ No input files found. Use --input or --input-dir with supported formats.")
+        print("❌ No input files found. Use --input or --input-folder with supported formats.")
         return
 
     total = len(input_files)
@@ -33,13 +53,13 @@ def main():
 
     for f in input_files:
         if os.path.isfile(f):
-            result = convert_image(f, args.output, args.format)
+            result = convert_image(f, args.output_folder, args.output_format)
             if result:
                 success += 1
         else:
             print(f"[SKIP] {f} is not a valid file.")
 
-    print(f"Done. Converted {success} of {total} file(s) to {args.format.upper()}.")
+    print(f"Done. Converted {success} of {total} file(s) to {args.output_format.upper()}.")
 
 if __name__ == "__main__":
     main()
