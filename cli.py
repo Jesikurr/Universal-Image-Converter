@@ -1,8 +1,30 @@
+"""Command-line interface for Universal Image Converter.
+
+Provides a CLI for batch image conversion with support for individual
+files or entire folders. Includes format validation and progress reporting.
+"""
+
 import argparse
 import os
 from converter import convert_image, get_supported_output_formats, get_supported_input_formats
 
 def main():
+    """Main entry point for the CLI application.
+    
+    Parses command-line arguments and executes image conversion based on
+    user input. Supports single/multiple file conversion and batch folder
+    processing.
+    
+    Command-line arguments:
+        --input, -i: One or more input image file paths
+        --input-folder: Directory containing images to convert
+        --output-format, -f: Target output format (jpg, png, webp, etc.)
+        --output-folder, -o: Directory for converted images
+        --list-formats: Display all supported input/output formats
+    
+    Returns:
+        None: Prints conversion results to stdout
+    """
     parser = argparse.ArgumentParser(description="Universal Image Converter CLI")
     parser.add_argument("--input", "-i", nargs="+", help="Path(s) to image file(s)")
     parser.add_argument("--input-folder", help="Folder containing image files to convert")

@@ -1,3 +1,9 @@
+"""Graphical user interface for Universal Image Converter.
+
+Provides a modern, themed GUI with drag-and-drop support, file browsing,
+format selection, and theme switching capabilities.
+"""
+
 import os
 import sys
 import ctypes
@@ -14,7 +20,21 @@ tkdnd_path = os.path.join(os.path.dirname(__file__), "tkdnd")
 os.environ["TKDND_LIBRARY"] = os.path.join(tkdnd_path, "libtkdnd2.9.5.dll")
 
 class ImageConverterApp:
+    """Main GUI application class for Universal Image Converter.
+    
+    Manages the graphical interface including drag-and-drop functionality,
+    file selection, format conversion, and theme switching.
+    
+    Attributes:
+        app (TkinterDnD.Tk): Main application window
+        style (tb.Style): ttkbootstrap style manager
+        files (list): List of selected image file paths
+        format_var (tk.StringVar): Selected output format
+        theme_btn (tb.Button): Theme toggle button
+    """
+    
     def __init__(self):
+        """Initialize the GUI application with all widgets and settings."""
         self.app = TkinterDnD.Tk()
         self.style = tb.Style("darkly")
 

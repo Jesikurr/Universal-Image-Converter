@@ -1,3 +1,9 @@
+"""Image conversion module for Universal Image Converter.
+
+This module provides core functionality for converting images between
+various formats using Pillow and pillow-heif libraries.
+"""
+
 import os
 from PIL import Image
 import pillow_heif
@@ -5,14 +11,40 @@ import pillow_heif
 pillow_heif.register_heif_opener()
 
 def get_supported_input_formats():
+    """Return a list of supported input image formats.
+    
+    Returns:
+        list: Lowercase file extensions without dots (e.g., ['jpg', 'png', 'heic'])
+    """
     return ["jpg", "jpeg", "png", "heic", "webp", "tiff", "bmp", "ico"]
 
 def get_supported_output_formats():
+    """Return a list of supported output image formats.
+    
+    Returns:
+        list: Lowercase file extensions without dots (e.g., ['jpg', 'png', 'heic'])
+    """
     return ["jpg", "png", "webp", "tiff", "bmp", "ico", "heic"]
 
 desktop_log_path = os.path.join(os.path.expanduser("~"), "Desktop", "conversion_log.txt")
 
 def convert_image(in_path, out_dir, out_format):
+    """Convert a single image file to the specified format.
+    
+    Args:
+        in_path (str): Full path to the input image file
+        out_dir (str): Directory where the converted image will be saved
+        out_format (str): Target output format (e.g., 'jpg', 'png', 'webp')
+    
+    Returns:
+        bool: True if conversion succeeded, False if it failed
+    
+    Notes:
+        - Automatically handles filename collisions by appending _1, _2, etc.
+        - Special handling for ICO format (resizes to 256x256)
+        - Logs all conversions to Desktop/conversion_log.txt
+        - Supports HEIC format through pillow-heif integration
+    """
     try:
         format_map = {
             "jpg": "JPEG",
