@@ -19,6 +19,34 @@ logger = logging.getLogger(__name__)
 
 pillow_heif.register_heif_opener()
 
+def _ensure_log_file():
+    """Ensure the log file directory exists.
+    
+    Creates the parent directory for the log file if it doesn't exist.
+    This prevents FileNotFoundError when writing to the log file.
+    """
+    try:
+        log_dir = os.path.dirname(config.LOG_FILE_PATH)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir, exist_ok=True)
+    except Exception as e:
+        logger.warning(f"Could not create log directory: {e}")
+
+def _write_to_log(message):
+    """Safely write a message to the log file.
+    
+    Args:
+        message (str): Message to write to the log file
+    
+    This function handles errors gracefully if the log file cannot be written.
+    """
+    try:
+        _ensure_log_file()
+        with open(config.LOG_FILE_PATH, "a", encoding="utf-8") as log:
+            log.write(message)
+    except Exception as e:
+        logger.warning(f"Could not write to log file: {e}")
+
 def get_supported_input_formats():
     """Return a list of supported input image formats.
     
@@ -70,12 +98,10 @@ def convert_image(in_path, out_dir, out_format):
             im.save(out_file, format=pil_format)
 
         logger.info(f"Successfully converted: {in_path} → {out_file}")
-        with open(config.LOG_FILE_PATH, "a", encoding="utf-8") as log:
-            log.write(f"✅ Converted: {in_path} → {out_file}\n")
+        _write_to_log(f"✅ Converted: {in_path} → {out_file}\n")
         return True
 
     except Exception as e:
         logger.error(f"Failed to convert {in_path}: {e}")
-        with open(config.LOG_FILE_PATH, "a", encoding="utf-8") as log:
-            log.write(f"❌ Failed: {in_path} → {e}\n")
+        _write_to_log(f"❌ Failed: {in_path} → {e}\n")
         return False
