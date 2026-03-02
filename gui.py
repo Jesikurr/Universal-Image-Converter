@@ -147,7 +147,8 @@ class ImageConverterApp:
 
     def browse_files(self):
         filetypes = [("Image files", "*.jpg *.jpeg *.png *.heic *.tiff *.bmp *.webp *.ico")]
-        self.files = filedialog.askopenfilenames(filetypes=filetypes)
+        selected_files = filedialog.askopenfilenames(filetypes=filetypes)
+        self.files = list(selected_files)  # Convert tuple to list
         if self.files:
             self.drop_label.config(text=f"{len(self.files)} file(s) selected")
 
@@ -174,7 +175,7 @@ class ImageConverterApp:
         # Start conversion in separate thread
         thread = threading.Thread(
             target=self._convert_images_thread,
-            args=(self.files.copy(), out_dir, out_format),
+            args=(list(self.files), out_dir, out_format),
             daemon=True
         )
         thread.start()
