@@ -16,6 +16,7 @@ import webbrowser
 from ttkbootstrap.constants import *
 from tkinterdnd2 import DND_FILES, TkinterDnD
 from converter import convert_image, get_supported_output_formats
+import config
 
 tkdnd_path = os.path.join(os.path.dirname(__file__), "tkdnd")
 os.environ["TKDND_LIBRARY"] = os.path.join(tkdnd_path, "libtkdnd2.9.5.dll")
@@ -37,16 +38,15 @@ class ImageConverterApp:
     def __init__(self):
         """Initialize the GUI application with all widgets and settings."""
         self.app = TkinterDnD.Tk()
-        self.style = tb.Style("darkly")
+        self.style = tb.Style(config.DEFAULT_THEME)
 
-        self.app.title("Universal Image Converter")
-        self.app.geometry("960x600")
-        self.app.minsize(850, 500)
+        self.app.title(config.APP_NAME)
+        self.app.geometry(f"{config.DEFAULT_WINDOW_WIDTH}x{config.DEFAULT_WINDOW_HEIGHT}")
+        self.app.minsize(config.MIN_WINDOW_WIDTH, config.MIN_WINDOW_HEIGHT)
         self.files = []
 
         try:
-            myappid = 'com.kurreations.imageconverter'
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(config.APP_ID)
         except Exception:
             pass
 
@@ -67,9 +67,9 @@ class ImageConverterApp:
     def init_theme_toggle(self):
         def toggle():
             current = self.style.theme.name
-            new_theme = "morph" if current == "darkly" else "darkly"
+            new_theme = config.LIGHT_THEME if current == config.DARK_THEME else config.DARK_THEME
             self.style.theme_use(new_theme)
-            self.theme_btn.config(text="Light Mode" if new_theme == "darkly" else "Dark Mode")
+            self.theme_btn.config(text="Light Mode" if new_theme == config.DARK_THEME else "Dark Mode")
 
         self.theme_btn = tb.Button(self.app, text="Light Mode", command=toggle)
         self.theme_btn.pack(anchor="ne", padx=10, pady=10, ipadx=5, ipady=2)
@@ -134,8 +134,8 @@ class ImageConverterApp:
         donate_btn.pack(anchor="se", padx=10, pady=5, ipadx=5, ipady=2)
 
     def show_donation_info(self):
-        url = "https://cash.app/$Jesikurr"
-        webbrowser.open(url)
+        """Open the developer donation page in default browser."""
+        webbrowser.open(config.DONATION_URL)
 
     def on_drop(self, event):
         raw = self.app.tk.splitlist(event.data)

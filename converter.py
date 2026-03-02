@@ -8,11 +8,12 @@ import os
 import logging
 from PIL import Image
 import pillow_heif
+import config
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=getattr(logging, config.LOG_LEVEL),
+    format=config.LOG_FORMAT
 )
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ def get_supported_input_formats():
     Returns:
         list: Lowercase file extensions without dots (e.g., ['jpg', 'png', 'heic'])
     """
-    return ["jpg", "jpeg", "png", "heic", "webp", "tiff", "bmp", "ico"]
+    return config.SUPPORTED_INPUT_FORMATS
 
 def get_supported_output_formats():
     """Return a list of supported output image formats.
@@ -32,9 +33,7 @@ def get_supported_output_formats():
     Returns:
         list: Lowercase file extensions without dots (e.g., ['jpg', 'png', 'heic'])
     """
-    return ["jpg", "png", "webp", "tiff", "bmp", "ico", "heic"]
-
-desktop_log_path = os.path.join(os.path.expanduser("~"), "Desktop", "conversion_log.txt")
+    return config.SUPPORTED_OUTPUT_FORMATS
 
 def convert_image(in_path, out_dir, out_format):
     """Convert a single image file to the specified format.
@@ -49,22 +48,12 @@ def convert_image(in_path, out_dir, out_format):
     
     Notes:
         - Automatically handles filename collisions by appending _1, _2, etc.
-        - Special handling for ICO format (resizes to 256x256)
-        - Logs all conversions to Desktop/conversion_log.txt
+        - Special handling for ICO format (resizes to configured size)
+        - Logs all conversions to desktop log file
         - Supports HEIC format through pillow-heif integration
     """
     try:
-        format_map = {
-            "jpg": "JPEG",
-            "jpeg": "JPEG",
-            "png": "PNG",
-            "webp": "WEBP",
-            "tiff": "TIFF",
-            "bmp": "BMP",
-            "ico": "ICO",
-            "heic": "HEIF"
-        }
-        pil_format = format_map.get(out_format.lower(), out_format.upper())
+        pil_format = config.PILLOW_FORMAT_MAP.get(out_format.lower(), out_format.upper())
 
         base_name = os.path.splitext(os.path.basename(in_path))[0]
         ext = f".{out_format}"
@@ -77,16 +66,16 @@ def convert_image(in_path, out_dir, out_format):
 
         with Image.open(in_path) as im:
             if out_format.lower() == "ico":
-                im = im.resize((256, 256))
+                im = im.resize(config.ICO_DEFAULT_SIZE)
             im.save(out_file, format=pil_format)
 
         logger.info(f"Successfully converted: {in_path} → {out_file}")
-        with open(desktop_log_path, "a", encoding="utf-8") as log:
+        with open(config.LOG_FILE_PATH, "a", encoding="utf-8") as log:
             log.write(f"✅ Converted: {in_path} → {out_file}\n")
         return True
 
     except Exception as e:
         logger.error(f"Failed to convert {in_path}: {e}")
-        with open(desktop_log_path, "a", encoding="utf-8") as log:
+        with open(config.LOG_FILE_PATH, "a", encoding="utf-8") as log:
             log.write(f"❌ Failed: {in_path} → {e}\n")
         return False
