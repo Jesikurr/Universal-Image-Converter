@@ -19,9 +19,8 @@ from tkinterdnd2 import DND_FILES, TkinterDnD
 from ttkbootstrap.constants import BOTH, LEFT, X
 
 import config
-from converter import convert_image
-from converter import get_supported_output_formats
-from settings import AppSettings, load_settings, save_settings
+from converter import convert_image_detailed, get_supported_output_formats
+from settings import load_settings, save_settings
 
 
 tkdnd_path = os.path.join(os.path.dirname(__file__), "tkdnd")
@@ -301,16 +300,26 @@ class ImageConverterApp:
         """Perform image conversion in background thread."""
         success = 0
         total = len(files)
+        failed_messages: List[str] = []
 
         for idx, file_path in enumerate(files, 1):
-            result = convert_image(file_path, out_dir, out_format)
-            if result:
+            result = convert_image_detailed(file_path, out_dir, out_format)
+            if result.success:
                 success += 1
+            else:
+                failed_messages.append(f"{os.path.basename(file_path)}: {result.error}")
 
             progress = (idx / total) * 100
             self.app.after(0, self._update_progress, progress, idx, total)
 
-        self.app.after(0, self._conversion_complete, success, total, out_format)
+        self.app.after(
+            0,
+            self._conversion_complete,
+            success,
+            total,
+            out_format,
+            failed_messages,
+        )
 
     def _update_progress(self, value: float, current: int, total: int) -> None:
         """Update progress bar and label (called from main thread)."""
@@ -318,17 +327,24 @@ class ImageConverterApp:
         self.progress_label.config(text=f"Converting: {current}/{total} files")
         self.app.update_idletasks()
 
-    def _conversion_complete(self, success: int, total: int, out_format: str) -> None:
+    def _conversion_complete(
+        self,
+        success: int,
+        total: int,
+        out_format: str,
+        failed_messages: List[str],
+    ) -> None:
         """Handle conversion completion (called from main thread)."""
         self.progress_frame.pack_forget()
 
         self.convert_btn.config(state="normal")
         self.format_combo.config(state="readonly")
 
-        messagebox.showinfo(
-            "Conversion Complete",
-            f"Converted {success} of {total} files to {out_format.upper()}",
-        )
+        message = f"Converted {success} of {total} files to {out_format.upper()}."
+        if failed_messages:
+            preview = "\n".join(failed_messages[:3])
+            message = f"{message}\n\nSome files failed:\n{preview}"
+        messagebox.showinfo("Conversion Complete", message)
 
         self.files = []
         self._update_selection_ui()
