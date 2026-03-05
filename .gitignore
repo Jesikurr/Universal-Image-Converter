@@ -3,7 +3,10 @@ __pycache__/
 build/
 dist/
 *.spec
+venv/
+.venv/
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+WARP.md
